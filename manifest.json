@@ -1,0 +1,14 @@
+{
+    "name": "Spotify Party",
+    "version": "1.0",
+    "description": "A simple Chrome extension to listen to music on Spotify with your friends at the same time!",
+    "permissions": ["tabs", "activeTab", "declarativeContent"],
+    "background": {
+        "scripts": ["jquery-3.5.0.min.js", "background.js"],
+        "persistent": false
+    },
+    "page_action": {
+        "default_popup": "popup.html"
+    },
+    "manifest_version": 2
+}
