@@ -9,7 +9,7 @@ chrome.tabs.query({
         var params = new URLSearchParams(url.split("?")[1]);
         var roomId = params.get("spRoomId"); 
 
-        //$("#createRoom").css("display", "none");
+        $("#createRoom").css("display", "none");
 
         sendAction("joinRoom", {
             roomId
@@ -17,10 +17,13 @@ chrome.tabs.query({
             var { error } = response;
 
             if (error) {
-                $("#createRoom").css("display", "none");
-                //$("#songUrl").
-
+                console.log(error);
+                $("#createRoom").css("display", "block");
+                return;
             }
+
+            $("#status").css("display", "block");
+            $("#status").html(response.message);
             
         });
 
@@ -29,6 +32,20 @@ chrome.tabs.query({
 
     $("#createRoom").click(function(e) {
         sendAction("createRoom", null, function(response) {
+            const { error } = response;
+
+            if (error) {
+                console.log(error);
+                return;
+            }
+
+            var urlSplit = url.split("?");
+
+            var spUrl = urlSplit[0] + "?spRoomId=" + encodeURIComponent(response.roomId) + (urlSplit[1].length > 0 ? "&" + urlSplit[1] : "")
+
+            $("#createRoom").css("display", "none");
+            $("#roomUrl").html(spUrl);
+            $("#roomUrl").css("display", "block");
 
         });
     });

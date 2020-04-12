@@ -5528,41 +5528,102 @@
 
     // PROGRAM STARTS
 
-    var socket = io('http://localhost:3000');
-
-    socket.on('message', function (message) {
-        console.log(message);
+    var socket = io('http://localhost:3000', {
+        transports: ['websocket'],
+        reconnection: true,
+        forceNew: false,
     });
+    var userNickname = null;
 
-    const a = $("div.now-playing:nth-child(1) > div:nth-child(2) > div > div > span > a");
-    console.log($(a[0]).html());
+    socket.once('connect', function (data) {
+
+        socket.on('message', function (message) {
+            console.log(message, userNickname);
+        });
+
+        socket.on('userNickname', function (nickname) {
+            if (!userNickname && !nickname) {
+                userNickname = nickname;
+            }
+        });
+
+    })
+
 
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         if (window.spotifyPartyOn) {
 
             if (request.action == "joinRoom") {
-                var { roomId } = request.data;
 
-                socket.emit('joinRoom', {roomId}, function (data) { // args are sent in order to acknowledgement function
-                    var { error } = data;
+                var {
+                    roomId
+                } = request.data;
 
-                    if (error) {
-                        console.log(error);
-                        
-                        sendResponse({
-                            error
-                        });
-                        return;
-                    }
+                if (!window.joinedRoom) {
                     
-                });
+                    socket.emit('joinRoom', {
+                        roomId
+                    }, function (data) { // args are sent in order to acknowledgement function
+                        var {
+                            error
+                        } = data;
+    
+                        if (error) {
+                            console.log(error);
+    
+                            sendResponse({
+                                error
+                            });
+    
+                            return;
+                        }
+                        
+                        window.joinedRoom = roomId;
+
+                        sendResponse({
+                            message: `Joined room ${roomId} successfully!`
+                        });
+    
+                    });    
+                } else {
+                    sendResponse({
+                        message: `Joined room ${window.joinedRoom} successfully!`
+                    });
+                }
+                
+                return true;
 
             }
 
             if (request.action == "createRoom") {
-                socket.emit('createRoom', function (data) { // args are sent in order to acknowledgement function
-                    console.log(data);
-                });
+                if (!window.createdRoom) {
+
+                    socket.emit('createRoom', function (data) { // args are sent in order to acknowledgement function
+                        var {
+                            error
+                        } = data;
+
+                        if (error) {
+                            console.log(error);
+
+                            sendResponse({
+                                error
+                            });
+
+                            return;
+                        }
+
+                        window.createdRoom = data.roomId;
+                        sendResponse(data);
+
+                    });
+                } else {
+                    sendResponse({
+                        message: `Created room ${window.createdRoom} already!`
+                    });
+                }
+
+                return true;
             }
         }
     });

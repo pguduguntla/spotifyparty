@@ -11,17 +11,22 @@
       p {
         font-weight: bold;
       }
+
+      #roomUrl {
+        display: none;
+      }
+
+      #status {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <h1>Spotify Party</h1>
-    <p>Enter a song url: </p>
-    <form id="songForm">
-        <input name="songUrl" id="songUrl" type="text" />
-        <input name="submit" type="submit" value="Go" id="goToSong" />
-    </form>
 
-    <button id="createRoom" >Create Room</button>
+    <button id="createRoom">Create Room</button>
+    <span><strong>URL: </strong></span><h3 id="roomUrl"></h3>
+    <h3 id="status"></h3>
 
     <script src="jquery-3.5.0.min.js"></script>
     <script src="popup.js"></script>
