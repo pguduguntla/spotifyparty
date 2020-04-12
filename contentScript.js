@@ -5528,28 +5528,41 @@
 
     // PROGRAM STARTS
 
-    const init = (data) => {
-        let {
-            songUrl
-        } = data;
-        const queryParams = $.param({
-            spId: "12345"
-        });
+    var socket = io('http://localhost:3000');
 
-        songUrl += `&${queryParams}`;
+    socket.on('message', function (message) {
+        console.log(message);
+    });
 
-        const a = $("div.now-playing:nth-child(1) > div:nth-child(2) > div > div > span > a");
-        console.log($(a[0]).html(), songUrl);
-
-        var socket = io('http://localhost:3000');
-
-    }
+    const a = $("div.now-playing:nth-child(1) > div:nth-child(2) > div > div > span > a");
+    console.log($(a[0]).html());
 
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-        if (request.action == "readDom") {
+        if (window.spotifyPartyOn) {
 
-            if (window.spotifyPartyOn) {
-                init(request.data);
+            if (request.action == "joinRoom") {
+                var { roomId } = request.data;
+
+                socket.emit('joinRoom', {roomId}, function (data) { // args are sent in order to acknowledgement function
+                    var { error } = data;
+
+                    if (error) {
+                        console.log(error);
+                        
+                        sendResponse({
+                            error
+                        });
+                        return;
+                    }
+                    
+                });
+
+            }
+
+            if (request.action == "createRoom") {
+                socket.emit('createRoom', function (data) { // args are sent in order to acknowledgement function
+                    console.log(data);
+                });
             }
         }
     });
