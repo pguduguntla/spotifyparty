@@ -5533,6 +5533,7 @@
         reconnection: true,
         forceNew: false,
     });
+    
     var userNickname = null;
 
     socket.once('connect', function (data) {
@@ -5553,6 +5554,12 @@
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         if (window.spotifyPartyOn) {
 
+            if (request.action == "init") {
+                sendResponse({
+                    roomId: window.createdRoom
+                });
+            }
+
             if (request.action == "joinRoom") {
 
                 var {
@@ -5560,10 +5567,13 @@
                 } = request.data;
 
                 if (!window.joinedRoom) {
+
+                    console.log("request")
                     
                     socket.emit('joinRoom', {
                         roomId
                     }, function (data) { // args are sent in order to acknowledgement function
+                        console.log(data)
                         var {
                             error
                         } = data;
@@ -5578,7 +5588,8 @@
                             return;
                         }
                         
-                        window.joinedRoom = roomId;
+                        window.joinedRoom = true;
+                        console.log("response")
 
                         sendResponse({
                             message: `Joined room ${roomId} successfully!`
@@ -5587,7 +5598,7 @@
                     });    
                 } else {
                     sendResponse({
-                        message: `Joined room ${window.joinedRoom} successfully!`
+                        message: `Already joined room ${roomId} successfully!`
                     });
                 }
                 
@@ -5600,7 +5611,7 @@
 
                     socket.emit('createRoom', function (data) { // args are sent in order to acknowledgement function
                         var {
-                            error
+                            error, roomId
                         } = data;
 
                         if (error) {
@@ -5613,13 +5624,15 @@
                             return;
                         }
 
-                        window.createdRoom = data.roomId;
-                        sendResponse(data);
+                        window.createdRoom = roomId;
+                        sendResponse({
+                            roomId
+                        });
 
                     });
                 } else {
                     sendResponse({
-                        message: `Created room ${window.createdRoom} already!`
+                        message: `Created room ${roomId} already!`
                     });
                 }
 
