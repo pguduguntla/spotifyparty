@@ -5524,7 +5524,7 @@
             }])
         });
         //# sourceMappingURL=socket.io.js.map
-    }
+    
 
     // PROGRAM STARTS
 
@@ -5548,28 +5548,68 @@
             }
         });
 
+        var sidebar;
+        $('body').css({
+          'padding-right': '300px'
+        });
+        sidebar = $("<div id='sidebar'></div>");
+        sidebar.css({
+          'position': 'fixed',
+          'right': '0px',
+          'top': '0px',
+          'z-index': 9999,
+          'width': '300px',
+          'height': '100%',
+          'background-color': 'blue'  // Confirm it shows up
+        });
+        $('body').append(sidebar);
+
+        // var chatFrame = document.createElement('Root__chatFrame'); 
+        // chatFrame.style.display = "flex";
+        // chatFrame.style.webkitBoxOrient = "vertical";
+        // chatFrame.style.direction = "normal";
+        // chatFrame.style.flexDirection = "column";
+        // chatFrame.style.minHeight= "0";
+
+        // document.getElementsByClassName("Root__top-container").appendChild(chatFrame);
+        // console.log("made chat")
+        $(".control-button").click(function(){
+            $(this).data('clicked', !$(this).data('clicked'));
+            console.log($(this).data('clicked'))
+    
+            var controlClicked = $(this).data('clicked');
+            socket.emit('controlClicked', {controlClicked});
+            
+    
+    
+    
+    
+        });
+
+
+        socket.on("stateUpdate", function (stateUpdate) {
+            console.log(stateUpdate);
+        });
+
+
     })
 
 
-    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-        if (window.spotifyPartyOn) {
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {        
 
-            if (request.action == "init") {
+            if (request.action === "init") {
                 sendResponse({
                     roomId: window.createdRoom
                 });
-            }
 
-            if (request.action == "joinRoom") {
+                return true;
+            } else if (request.action === "joinRoom") {
 
                 var {
                     roomId
                 } = request.data;
 
-                if (!window.joinedRoom) {
-
-                    console.log("request")
-                    
+                if (!window.joinedRoom) {                    
                     socket.emit('joinRoom', {
                         roomId
                     }, function (data) { // args are sent in order to acknowledgement function
@@ -5604,11 +5644,9 @@
                 
                 return true;
 
-            }
-
-            if (request.action == "createRoom") {
+            } else if (request.action === "createRoom") {
                 if (!window.createdRoom) {
-
+                    
                     socket.emit('createRoom', function (data) { // args are sent in order to acknowledgement function
                         var {
                             error, roomId
@@ -5623,13 +5661,13 @@
 
                             return;
                         }
-
                         window.createdRoom = roomId;
                         sendResponse({
                             roomId
                         });
 
                     });
+                    
                 } else {
                     sendResponse({
                         message: `Created room ${roomId} already!`
@@ -5638,6 +5676,9 @@
 
                 return true;
             }
-        }
+
     });
+
+}
+
 })();

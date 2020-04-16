@@ -9,10 +9,9 @@ chrome.tabs.query({
         var { roomId } = response;
 
         if (roomId) {
-            showURL(response.roomId);
+            showURL(roomId);
         } else {
             // Try to join a room if the url contains spRoomId
-
             if (url.includes("spRoomId=")) {
                 joinRoom();
             }
@@ -21,9 +20,9 @@ chrome.tabs.query({
         
     });
 
-    $("#createRoom").click(function(e) {
-        
+    $(document).on('click', '#createRoom', function(e) {        
         sendAction("createRoom", null, function(response) {
+            
             const { error, roomId } = response;
 
             if (error) {
