@@ -5548,51 +5548,141 @@
             }
         });
 
-        var sidebar;
-        $('body').css({
-          'padding-right': '300px'
-        });
-        sidebar = $("<div id='sidebar'></div>");
-        sidebar.css({
-          'position': 'fixed',
-          'right': '0px',
-          'top': '0px',
-          'z-index': 9999,
-          'width': '300px',
-          'height': '100%',
-          'background-color': 'blue'  // Confirm it shows up
-        });
-        $('body').append(sidebar);
-
-        // var chatFrame = document.createElement('Root__chatFrame'); 
-        // chatFrame.style.display = "flex";
-        // chatFrame.style.webkitBoxOrient = "vertical";
-        // chatFrame.style.direction = "normal";
-        // chatFrame.style.flexDirection = "column";
-        // chatFrame.style.minHeight= "0";
-
-        // document.getElementsByClassName("Root__top-container").appendChild(chatFrame);
-        // console.log("made chat")
-        $(".control-button").click(function(){
-            $(this).data('clicked', !$(this).data('clicked'));
-            console.log($(this).data('clicked'))
-    
-            var controlClicked = $(this).data('clicked');
-            socket.emit('controlClicked', {controlClicked});
-            
-    
-    
-    
-    
-        });
-
-
-        socket.on("stateUpdate", function (stateUpdate) {
-            console.log(stateUpdate);
-        });
 
 
     })
+
+
+    /// CHAT
+
+    var messages = [];
+    var sidebar;
+    $('body').css({
+      'padding-right': '300px'
+    });
+    sidebar = $("<div id='sidebar'></div>");
+    sidebar.css({
+      'position': 'fixed',
+      'right': '0px',
+      'top': '0px',
+      'z-index': 9999,
+      'width': '300px',
+      'height': '100%',
+      'background-color': 'white'  // Confirm it shows up
+    });
+    $('body').append(sidebar);
+
+
+    var formHtml = `<style> 
+                        #messages { 
+                            list-style-type: 
+                            none; margin: 0; 
+                            padding: 0; 
+                        }
+
+                        #messages li { 
+                            padding: 5px 10px; 
+                        }
+
+                        #messages li:nth-child(odd) { 
+                            background: #eee; 
+                        }
+
+                        form { 
+                            background: #000; 
+                            padding: 3px; 
+                            position: fixed; 
+                            bottom: 0; 
+                            width: 100%; 
+                        }
+
+                        form input { 
+                            border: 0; 
+                            padding: 10px; 
+                            width: 100%; 
+                            margin-right: 0.5%; 
+                        }
+
+                        form button { 
+                            width: 100%; 
+                            background: blue; 
+                            border: none; 
+                            padding: 10px; 
+                        }
+                    </style> 
+
+                    <ul id="messages"></ul>
+                    <form action="">
+                            <input id="m" autocomplete="off" /><button>Send</button>
+                    </form>`
+
+    var form = $(formHtml);
+    $("#sidebar").append(form);
+
+    $('form').submit(function(e) {
+        e.preventDefault();
+        message = {
+            body: $('#m').val(),
+        }
+
+        socket.emit('sendMessage', message);
+        messages.push(message.body);
+        $('#m').val('');
+        return false;
+      });
+
+    socket.on("sendMessage", function(message){
+        console.log(messages);
+        if(message.sender === socket.id){
+            $('#messages').append($('<li>').text(message.body).css({'text-align': 'right'}));
+        }else{
+            $('#messages').append($('<li>').text(message.body));
+        }
+        
+    });
+
+
+
+    
+
+    // var chatFrame = document.createElement('Root__chatFrame'); 
+    // chatFrame.style.display = "flex";
+    // chatFrame.style.webkitBoxOrient = "vertical";
+    // chatFrame.style.direction = "normal";
+    // chatFrame.style.flexDirection = "column";
+    // chatFrame.style.minHeight= "0";
+
+    // document.getElementsByClassName("Root__top-container").appendChild(chatFrame);
+    // console.log("made chat")
+
+
+    
+    $(".control-button--circled").on("click", function(e){
+        if(e.which) {
+            $(this).data('clicked', !$(this).data('clicked'));
+            var controlClicked = $(this).data('clicked');
+            socket.emit('controlClicked', {controlClicked});
+            console.log("triggered by click");
+        }else{
+            console.log("triggered by code");
+       }   
+
+    });
+
+
+    socket.on("stateUpdate", function (stateUpdate) {
+        console.log(socket.id, stateUpdate.userId);
+        if(socket.id === stateUpdate.userId){
+            console.log("im host");
+        }else{
+            console.log('trigger')
+            $(".control-button--circled").trigger("click");
+        }
+        
+        
+        
+    });
+
 
 
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {        
