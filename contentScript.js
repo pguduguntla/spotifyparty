@@ -5568,52 +5568,123 @@
       'z-index': 9999,
       'width': '300px',
       'height': '100%',
-      'background-color': 'white'  // Confirm it shows up
+      'background-color': '#050500'  // Confirm it shows up
     });
     $('body').append(sidebar);
 
+//                            overflow-y: scroll;
 
     var formHtml = `<style> 
                         #messages { 
-                            list-style-type: 
-                            none; margin: 0; 
+                            list-style: none;
+                            margin: 0; 
                             padding: 0; 
+                            width: 300px;
+                            height: 100%;
                         }
 
                         #messages li { 
-                            padding: 5px 10px; 
-                        }
-
-                        #messages li:nth-child(odd) { 
-                            background: #eee; 
+                            display: inline-block;
+                            clear: both;
+                            word-wrap: break-word;
                         }
 
                         form { 
                             background: #000; 
-                            padding: 3px; 
                             position: fixed; 
                             bottom: 0; 
-                            width: 100%; 
+                            width: 300px; 
+                            height: ${$(".now-playing-bar").css("height")};
+                            background-color: #282828;
                         }
 
                         form input { 
                             border: 0; 
-                            padding: 10px; 
-                            width: 100%; 
-                            margin-right: 0.5%; 
+                            padding: 10px;
+                            width: 260px;
+                            background-color: #282828;
+                            
                         }
 
-                        form button { 
-                            width: 100%; 
-                            background: blue; 
+                        #submit { 
+                            width: 40px; 
+                            background: none; 
                             border: none; 
-                            padding: 10px; 
+                            padding: 10px;
+                             
                         }
-                    </style> 
 
+                        #support{
+                            width: 150px;
+                            margin-left: auto;
+                            margin-right: auto;
+                            height: 30px;
+                            background-color: #1DB953;
+                            border: none; 
+                            padding: 10px;
+
+                            border-radius: 20px;
+                            color: white;
+                            
+                        }
+
+            
+
+                        #myMessage{  
+                            padding: 5px 10px;    
+                            color: white;
+                            margin-left: 10px;
+                            margin-right: 10px;
+                            border-radius: 2px;
+                            margin-bottom: 5px;
+                            background-color: #1DB953;
+                            float: right;
+                        }
+
+                        #externalMessage{
+                            padding: 5px 10px;    
+                            color: white;
+                            margin-left: 10px;
+                            margin-right: 10px;
+                            border-radius: 2px;
+                            margin-bottom: 5px;
+                            background-color: #282828;
+                            float: left;
+                        }
+
+                        #externalName{
+                            color: #A8A8A8;
+                            float: left;
+                            font-size: 10px;
+                            margin-left: 10px;
+                        }
+
+                        #systemMessage{
+                            font-size: 12px;
+                            width: 100%;
+                            text-align: center;
+                            font-style: italic;
+
+                        }
+
+                        #party-title{
+                            color: white;
+                            margin-left: 20px;
+                            margin-top: 20px;
+                            margin-bottom: 20px;
+                        }
+
+
+                    </style> 
+                    
+                    
+
+                    <h1 id="party-title">Spotify Party</h1>
+                    <br/>
                     <ul id="messages"></ul>
                     <form action="">
-                            <input id="m" autocomplete="off" /><button>Send</button>
+                            <input placeholder="Say something..." id="m" autocomplete="off" /><button id="submit" >Send</button>
+                            <div id="support">Support Us</div>
                     </form>`
 
     var form = $(formHtml);
@@ -5626,20 +5697,39 @@
         }
 
         socket.emit('sendMessage', message);
-        messages.push(message.body);
+        messages.push(message.content);
         $('#m').val('');
         return false;
       });
 
     socket.on("sendMessage", function(message){
         console.log(messages);
-        if(message.sender === socket.id){
-            $('#messages').append($('<li>').text(message.body).css({'text-align': 'right'}));
-        }else{
-            $('#messages').append($('<li>').text(message.body));
-        }
+        addMessage(message);
         
     });
+
+    var previousSender = null;
+
+    function addMessage(message){
+        if(message.senderId === socket.id){
+            $('#messages').append($('<li>').attr("id", "myMessage").text(message.content)); //.css({'text-align': 'right'}));
+        }else{
+            if(previousSender != message.senderId){
+                $('#messages').append($('<li>').attr("id", "externalName").text(message.senderNickName));
+            }
+            $('#messages').append($('<li>').attr("id", "externalMessage").text(message.content));
+        }
+        previousSender = message.senderId;
+
+    }
+
+    socket.on('systemMessage', function(message){
+        addSystemMessage(message);
+    });
+
+    function addSystemMessage(message){
+        $('#messages').append($('<li>').attr("id", "systemMessage").text(message));
+    }
 
 
 
@@ -5656,32 +5746,207 @@
     // console.log("made chat")
 
 
-    
-    $(".control-button--circled").on("click", function(e){
-        if(e.which) {
-            $(this).data('clicked', !$(this).data('clicked'));
-            var controlClicked = $(this).data('clicked');
-            socket.emit('controlClicked', {controlClicked});
-            console.log("triggered by click");
+
+    //SPOTIFY
+
+    var isPlaying = null;
+    var playbackTime = null;
+    var songIndex = null;
+
+    //returns isPlaying
+    function getCurrentState(){
+        var isPlaying;
+        if($(".spoticon-play-16").length > 0){
+            isPlaying = false;
         }else{
-            console.log("triggered by code");
-       }   
-
-    });
-
-
-    socket.on("stateUpdate", function (stateUpdate) {
-        console.log(socket.id, stateUpdate.userId);
-        if(socket.id === stateUpdate.userId){
-            console.log("im host");
-        }else{
-            console.log('trigger')
-            $(".control-button--circled").trigger("click");
+            isPlaying = true;
         }
-        
-        
+
+        return isPlaying;
+    }
+
+    $(".spoticon-play-16").mousedown(function(){
+        console.log("clicked");
+        setTimeout(sendUpdate, 150);
+    });
+
+    $(".progress-bar").mousedown(function(e){
+        setTimeout(sendUpdate, 150);
+    });
+
+
+    $(document).click(function(e) { 
+        // Check for left button
+        var target = $(e.target);
         
     });
+
+    $('body').on('click', '.tracklist-play-pause.tracklist-top-align', function() {
+        songIndex = $(this).index(".tracklist-play-pause.tracklist-top-align");
+        setTimeout(sendUpdate, 150);
+
+    });
+
+ 
+
+   
+
+    
+    
+    // function getCurrentLink(){
+    //     // var songWrapper = $(".react-contextmenu-wrapper").eq(3);
+    //     var songURL = $(".c319b99793755cc3bba709fe1b1fda42-scss.ellipsis-one-line a").attr("href");
+    //     var link = "open.spotify.com" + songURL; 
+    //     return link;
+    // }
+    
+
+    // $('body').on('DOMSubtreeModified', '.now-playing-bar__left', function(){
+    //     console.log("changed");
+    //     setTimeout(sendUpdate, 150);
+
+    // });
+
+    function getTimeElapsed(){
+        var timeString = $(".playback-bar__progress-time")[0].textContent
+        return convertSecondsElapsed(timeString);
+    }
+
+    function convertSecondsElapsed(timeString){
+        var splitTime = timeString.split(":");
+        var seconds = splitTime[0] * 60 + splitTime[1] * 1;
+        return Math.round(seconds);
+    }
+    
+
+
+
+    function sendUpdate(){
+        isPlaying = getCurrentState();
+        playbackTime = getTimeElapsed();
+        console.log("sent " + isPlaying + playbackTime);
+        socket.emit('sendUpdate', {isPlaying, playbackTime, songIndex});
+
+    }
+
+
+    socket.on('getUpdate', function(data){
+        getUpdate(data);
+
+    });
+
+
+    function getUpdate(data){
+        isPlaying = data.isPlaying;
+        playbackTime = data.playbackTime;
+        var newSongIndex = data.songIndex;
+        
+        // console.log("songLink is " + songLink + "current is " + getCurrentLink());
+        if(isPlaying != getCurrentState()){
+            if(isPlaying){
+                play();
+                console.log("isPlaying=" + isPlaying + "  currState=" + getCurrentState());
+            }else{
+                pause();
+                console.log("isPlaying=" + isPlaying + "  currState=" + getCurrentState());
+
+            }
+        }
+
+        if(playbackTime != getTimeElapsed()){
+            console.log(playbackTime + "  " + getTimeElapsed());
+            moveToPlaybackPosition(playbackTime);
+        }
+
+        if(songIndex != newSongIndex){
+            playNewSong(newSongIndex);
+        }
+
+    }
+
+
+    function playNewSong(targetIndex){
+
+        $('.tracklist-play-pause.tracklist-top-align').each(function(i, obj) {
+            var index = $(this).index(".tracklist-play-pause.tracklist-top-align");
+            if(index == targetIndex){
+                $(this).click();
+            }
+
+        });
+
+    }
+
+
+
+    // var max = convertSecondsElapsed($(".playback-bar__progress-time")[1].textContent);
+    //     console.log($(".playback-bar__progress-time")[1].textContent);
+    //     console.log("max" + max);
+    //     var x = e.pageX - this.offsetLeft; // or e.offsetX (less support, though)
+    //     var y = e.pageY - this.offsetTop;  // or e.offsetY
+    //     var clickedValue = x * max / this.offsetWidth;
+    //     console.log(clickedValue);
+
+    function moveToPlaybackPosition(time){
+        var max = convertSecondsElapsed($(".playback-bar__progress-time")[1].textContent);
+        var bar = $(".middle-align");
+        var xBar = time * bar.width() / max;
+        console.log("time: " + time);
+        console.log("baroffsetwid: " + bar.width());
+        console.log("xbar" + xBar);
+        var x = xBar + bar.offset().left;
+        console.log("baroffsetleft: " + bar.offset().left);
+        var y = bar.offset().top + bar.height() / 2;
+        console.log("baroffsettop: " + bar.offset().top);
+        console.log(x, y);
+        click(Math.round(x), y, bar.offset().left, bar.offset().top);
+    }
+
+    function simulateClick(x,y){
+        var ev = document.createEvent("MouseEvent");
+        var el = document.elementFromPoint(x,y);
+        ev.initMouseEvent(
+            "click",
+            true /* bubble */, true /* cancelable */,
+            window, null,
+            x, y, 0, 0, /* coordinates */
+            false, false, false, false, /* modifier keys */
+            0 /*left*/, null
+        );
+        el.dispatchEvent(ev);
+    }
+
+    function click(x, y, offsetLeft, offsetTop){
+        var bar = $(".middle-align");
+        eventOptions = {
+            'bubbles': true,
+            'button': 0,
+            'screenX': x - $(window).scrollLeft(),
+            'screenY': y - $(window).scrollTop(),
+            'clientX': x - $(window).scrollLeft(),
+            'clientY': y - $(window).scrollTop(),
+            'offsetX': x - offsetLeft,
+            'offsetY': y - offsetTop,
+            'pageX': x,
+            'pageY': y,
+            'currentTarget': bar
+        };
+
+        bar[0].dispatchEvent(new MouseEvent('mousedown', eventOptions));
+        bar[0].dispatchEvent(new MouseEvent('mouseup', eventOptions));
+        bar[0].dispatchEvent(new MouseEvent('mouseout', eventOptions));
+    }
+
+    function play(){
+        console.log('play');
+        $(".spoticon-play-16")[0].click();
+    }
+
+    function pause(){
+        console.log('pause');
+        $(".spoticon-pause-16")[0].click();
+    }
+
 
 
 
@@ -5705,7 +5970,8 @@
                     }, function (data) { // args are sent in order to acknowledgement function
                         console.log(data)
                         var {
-                            error
+                            error,
+                            roomMessages
                         } = data;
     
                         if (error) {
@@ -5717,7 +5983,14 @@
     
                             return;
                         }
+
+                        console.log(roomMessages);  
                         
+                        roomMessages.forEach(function (item, index){
+                            addMessage(item);
+                        });
+
+
                         window.joinedRoom = true;
                         console.log("response")
 

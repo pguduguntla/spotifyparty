@@ -63,8 +63,9 @@ chrome.tabs.query({
     function showURL(roomId){
         var urlSplit = url.split("?");
 
-        var spUrl = urlSplit[0] + "?spRoomId=" + encodeURIComponent(roomId) + (urlSplit[1].length > 0 ? "&" + urlSplit[1] : "")
-        
+        // var spUrl = urlSplit[0] + "?spRoomId=" + encodeURIComponent(roomId) + (urlSplit[1].length > 0 ? "&" + urlSplit[1] : "")
+        var spUrl = url + "?spRoomId=" + encodeURIComponent(roomId);
+        console.log(spUrl);
         $("#createRoom").css("display", "none");
         $("#roomUrl").html(spUrl);
         $("#roomUrl").css("display", "block");
