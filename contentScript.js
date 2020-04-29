@@ -5752,6 +5752,12 @@
     var isPlaying = null;
     var playbackTime = null;
     var songIndex = null;
+    const PLAYBACK_MARGIN = 1;
+
+
+    function wait(){
+
+    }
 
     //returns isPlaying
     function getCurrentState(){
@@ -5767,11 +5773,17 @@
 
     $(".spoticon-play-16").mousedown(function(){
         console.log("clicked");
-        setTimeout(sendUpdate, 150);
+        setTimeout(function() {
+            sendUpdate("isPlaying");
+            
+        }, 150);
     });
 
     $(".progress-bar").mousedown(function(e){
-        setTimeout(sendUpdate, 150);
+        setTimeout(function() {
+            sendUpdate("playbackTime");
+            
+        }, 150);
     });
 
 
@@ -5783,7 +5795,10 @@
 
     $('body').on('click', '.tracklist-play-pause.tracklist-top-align', function() {
         songIndex = $(this).index(".tracklist-play-pause.tracklist-top-align");
-        setTimeout(sendUpdate, 150);
+        setTimeout(function() {
+            sendUpdate("songIndex");
+            
+        }, 150);
 
     });
 
@@ -5821,11 +5836,25 @@
 
 
 
-    function sendUpdate(){
-        isPlaying = getCurrentState();
-        playbackTime = getTimeElapsed();
-        console.log("sent " + isPlaying + playbackTime);
-        socket.emit('sendUpdate', {isPlaying, playbackTime, songIndex});
+    function sendUpdate(changed){
+
+        if(changed === "isPlaying"){
+            isPlaying = getCurrentState();
+            socket.emit('sendUpdate', {isPlaying});
+        }
+        
+        if(changed === "playbackTime"){
+            playbackTime = getTimeElapsed();
+            socket.emit('sendUpdate', {playbackTime});
+        }
+        
+        if(changed === "songIndex"){
+            socket.emit('sendUpdate', {songIndex});
+        }
+
+
+        // console.log("sent " + isPlaying + playbackTime);
+        // socket.emit('sendUpdate', {isPlaying, playbackTime, songIndex});
 
     }
 
@@ -5837,30 +5866,38 @@
 
 
     function getUpdate(data){
-        isPlaying = data.isPlaying;
-        playbackTime = data.playbackTime;
-        var newSongIndex = data.songIndex;
-        
-        // console.log("songLink is " + songLink + "current is " + getCurrentLink());
-        if(isPlaying != getCurrentState()){
-            if(isPlaying){
-                play();
-                console.log("isPlaying=" + isPlaying + "  currState=" + getCurrentState());
-            }else{
-                pause();
-                console.log("isPlaying=" + isPlaying + "  currState=" + getCurrentState());
 
+        if(data.isPlaying != null){
+            isPlaying = data.isPlaying;
+            if(isPlaying != getCurrentState()){
+                if(isPlaying){
+                    play();
+                    console.log("isPlaying=" + isPlaying + "  currState=" + getCurrentState());
+                }else{
+                    pause();
+                    console.log("isPlaying=" + isPlaying + "  currState=" + getCurrentState());
+    
+                }
             }
         }
+    
+        if(data.playbackTime != null){
+            playbackTime = data.playbackTime;
+            if(playbackTime > (getTimeElapsed() + PLAYBACK_MARGIN) || 
+               playbackTime < (getTimeElapsed() - PLAYBACK_MARGIN) ){
 
-        if(playbackTime != getTimeElapsed()){
-            console.log(playbackTime + "  " + getTimeElapsed());
-            moveToPlaybackPosition(playbackTime);
+                console.log(playbackTime + "  " + getTimeElapsed());
+                moveToPlaybackPosition(playbackTime);
+            }
         }
-
-        if(songIndex != newSongIndex){
-            playNewSong(newSongIndex);
+    
+        if(data.songIndex != null){
+            var newSongIndex = data.songIndex;
+            if(songIndex != newSongIndex){
+                playNewSong(newSongIndex);
+            }
         }
+        
 
     }
 
@@ -5931,6 +5968,8 @@
             'pageY': y,
             'currentTarget': bar
         };
+
+
 
         bar[0].dispatchEvent(new MouseEvent('mousedown', eventOptions));
         bar[0].dispatchEvent(new MouseEvent('mouseup', eventOptions));
