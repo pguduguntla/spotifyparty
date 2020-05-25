@@ -1,15 +1,32 @@
 chrome.tabs.query({
     active: true,
     currentWindow: true
-}, function (tabs) {
+
+}, function(tabs) {
+
 
     var url = tabs[0].url;
 
+
     sendAction("init", null, function(response) {
+        if (!url.includes("/playlist/")) {
+            $(".nonPlaylist").css("display", "block");
+            $(".join").css("display", "none");
+            $(".container").css("display", "none");
+            return;
+        }
+
+        $("#step2").css("display", "none");
+        $("#step3").css("display", "none");
+        $(".nonPlaylist").css("display", "none");
+        $(".join").css("display", "none");
+
+
         var { roomId } = response;
 
         if (roomId) {
             showURL(roomId);
+
         } else {
             // Try to join a room if the url contains spRoomId
             if (url.includes("spRoomId=")) {
@@ -17,12 +34,12 @@ chrome.tabs.query({
             }
 
         }
-        
+
     });
 
-    $(document).on('click', '#createRoom', function(e) {        
+    $(document).on('click', '#createRoom', function(e) {
         sendAction("createRoom", null, function(response) {
-            
+
             const { error, roomId } = response;
 
             if (error) {
@@ -31,15 +48,15 @@ chrome.tabs.query({
             }
 
             showURL(roomId);
-        
+
         });
     });
 
     function joinRoom() {
         var params = new URLSearchParams(url.split("?")[1]);
-        var roomId = params.get("spRoomId"); 
-
-        $("#createRoom").css("display", "none");
+        var roomId = params.get("spRoomId");
+        $(".join").css("display", "block");
+        $(".container").css("display", "none");
 
         sendAction("joinRoom", {
             roomId
@@ -52,15 +69,15 @@ chrome.tabs.query({
                 return;
             }
 
-            $("#status").css("display", "block");
+            // $("#status").css("display", "block");
             console.log(response)
             $("#status").html(message);
-            
+
         });
     }
 
 
-    function showURL(roomId){
+    function showURL(roomId) {
         var urlSplit = url.split("?");
 
         // var spUrl = urlSplit[0] + "?spRoomId=" + encodeURIComponent(roomId) + (urlSplit[1].length > 0 ? "&" + urlSplit[1] : "")
@@ -69,12 +86,14 @@ chrome.tabs.query({
         $("#createRoom").css("display", "none");
         $("#roomUrl").html(spUrl);
         $("#roomUrl").css("display", "block");
+        $("#step2").css("display", "block");
+        $("#step3").css("display", "block");
     }
 
     function sendAction(action, data, callback) {
         chrome.tabs.executeScript(tabs[0].id, {
             file: 'contentScript.js'
-        }, function () {
+        }, function() {
             chrome.tabs.sendMessage(tabs[0].id, {
                 action,
                 data
@@ -85,6 +104,6 @@ chrome.tabs.query({
             });
         });
     }
-    
+
 
 });

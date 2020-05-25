@@ -1,35 +1,133 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700,600,500,400">
     <style>
-      button {
-        height: 30px;
-        width: 30px;
-        outline: none;
-      }
-
-      p {
-        font-weight: bold;
-      }
-
-      #roomUrl {
-        display: none;
-      }
-
-      #status {
-        display: none;
-      }
+        body {
+            background-color: #1A1A1A;
+            font-family: "Montserrat", serif;
+            width: 400px;
+        }
+        
+        .container {
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 40px;
+            width: 80%;
+        }
+        
+        ul {
+            padding: 0;
+            list-style-type: none;
+        }
+        
+        ul li {
+            padding-bottom: 20px;
+            list-style-type: none;
+            color: white;
+            font-weight: 400;
+            font-size: 18px;
+        }
+        
+        .title,
+        .join {
+            color: white;
+            font-weight: 700;
+            font-size: 28px;
+        }
+        
+        button {
+            font-family: "Montserrat", serif;
+            height: 40px;
+            width: 140px;
+            outline: none;
+            color: white;
+            background-color: #1DB953;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 13px;
+            margin-left: 20px;
+        }
+        
+        p {
+            font-weight: bold;
+        }
+        
+        #roomUrl,
+        strong {
+            display: none;
+            color: white;
+        }
+        
+        #roomUrl {
+            width: 80%;
+            font-size: 13px;
+            padding: 10px;
+            /* These are technically the same, but use both */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            -ms-word-break: break-all;
+            /* This is the dangerous one in WebKit, as it breaks things wherever */
+            word-break: break-all;
+            /* Instead use this non-standard one: */
+            word-break: break-word;
+            /* Adds a hyphen where the word breaks, if supported (No Blink) */
+            -ms-hyphens: auto;
+            -moz-hyphens: auto;
+            -webkit-hyphens: auto;
+            hyphens: auto;
+        }
+        
+        #status {
+            display: none;
+        }
+        
+        #step3 span {
+            color: #1DB953;
+        }
+        
+        .join,
+        .nonPlaylist {
+            font-size: 25px;
+            padding: 20px;
+            width: 90%;
+            color: white;
+        }
     </style>
-  </head>
-  <body>
-    <h1>Spotify Party</h1>
+</head>
 
-    <button id="createRoom">Create Room</button>
-    <span><strong>URL: </strong></span><h3 id="roomUrl"></h3>
-    <h3 id="status"></h3>
+<body>
+
+    <p class="nonPlaylist">You must be on a playlist to use SpotifyParty.</p>
+    <p class="join">You have joined a Spotify Party!</p>
+
+    <div class="container">
+        <p class="title">Start a Spotify Party!</p>
+        <div>
+            <p></p>
+        </div>
+        <ul>
+            <li>Step 1)
+                <button id="createRoom">Create a Room</button>
+                <span><strong>URL: </strong></span>
+                <h3 id="roomUrl"></h3>
+            </li>
+            <li id="step2">Step 2) Send the link above to friends! </li>
+            <li id="step3">Step 3) <span>Enjoy!</span></li>
+
+
+        </ul>
+
+
+
+        <h3 id="status"></h3>
+    </div>
 
 
     <script src="jquery-3.5.0.min.js"></script>
     <script src="popup.js"></script>
-  </body>
+</body>
+
 </html>
